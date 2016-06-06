@@ -13,11 +13,16 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h> //sleep
+#include "parameters.h"
 #include "heuristic.h"
 #include "threshold.h"
 
 bool testTriggersIfThresholdExceeded() {
-	Heuristic *threshold = new Threshold("time=3,count=2");
+	AgentParameters params;
+	params.time_threshold=3;
+	params.count_threshold=2;
+	Heuristic *threshold = new Threshold(params);
 
 	bool passed = !threshold->onOOM() &&
 	              !threshold->onOOM() &&
@@ -28,42 +33,37 @@ bool testTriggersIfThresholdExceeded() {
 	return passed;
 }
 
-bool testConstructionWithParameters() {
-	Threshold *threshold = new Threshold("time=10,count=5");
-	bool passed = ((threshold->getCount_Threshold() == 5) && (threshold->getTime_Threshold() == 10));
-    if (!passed) {
-       fprintf(stdout, "testConstructionWithParameters FAILED\n");
-    }	return passed;
+bool testDoesNotTriggerIfThresholdNotExceeded() {
+	AgentParameters params;
+	params.time_threshold=1;
+	params.count_threshold=2;
+	Heuristic *threshold = new Threshold(params);
+
+	bool passed = !threshold->onOOM() &&
+	              !threshold->onOOM();
+  if (!passed) {
+     fprintf(stdout, "testTriggersIfThresholdExceeded FAILED\n");
+		 return passed;
+  }
+	sleep(2);
+	passed = !threshold->onOOM() &&
+	              !threshold->onOOM();
+	if (!passed) {
+	  fprintf(stdout, "testTriggersIfThresholdExceeded FAILED\n");
+	}
+	return passed;
 }
 
-bool testConstructionWithNullPointer() {
-	Threshold *threshold = new Threshold(0);
-	bool passed = ((threshold->getCount_Threshold() == 0) && (threshold->getTime_Threshold() == 1));
-    if (!passed) {
-       fprintf(stdout, "testConstructionWithNullPointer FAILED\n");
-    }	return passed;
-}
-
-bool testConstructionWithNoParameters() {
-	Threshold *threshold = new Threshold("");
-	bool passed = ((threshold->getCount_Threshold() == 0) && (threshold->getTime_Threshold() == 1));
-    if (!passed) {
-       fprintf(stdout, "testConstructionWithNoParameters FAILED\n");
-    }	return passed;
-}
 
 int main() {
 	bool result = (testTriggersIfThresholdExceeded() &&
-		           testConstructionWithParameters() &&
-              	   testConstructionWithNullPointer() &&
-				   testConstructionWithNoParameters());
-	if (result) {    	
+		           testDoesNotTriggerIfThresholdNotExceeded());
+	if (result) {
        fprintf(stdout, "SUCCESS\n");
 	   exit(EXIT_SUCCESS);
 	}
-	else { 
+	else {
     	fprintf(stdout, "FAILURE\n");
     	exit(EXIT_FAILURE);
-	}	
+	}
 }
-

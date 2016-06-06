@@ -19,9 +19,9 @@ TARGET=libjvmkill.so
 
 all: build alltests
 
-build:	
+build:
 	@echo "=============================================="
-	g++ $(CPPFLAGS) -o $(TARGET) jvmkill.c++ threshold.c++ killaction.c++
+	g++ $(CPPFLAGS) -o $(TARGET) jvmkill.c++ agentcontroller.c++ parametersparser.c++ threshold.c++ killaction.c++ base.c++ memory.c++ heaphistogramaction.c++
 	chmod 644 $(TARGET)
 
 clean:
@@ -39,13 +39,22 @@ ctests: build thresholdctests killactionctests
 	gcc -g -Wall -Werror $(INCLUDE) $(ASNEEDED) -ldl -o tests tests.c
 	./tests
 
-thresholdctests: build
+thresholdctests:
 	g++ -g -Wall -Werror $(INCLUDE) -ldl -o thresholdtests thresholdtests.c++ threshold.c++
 	./thresholdtests
 
 killactionctests: build
 	g++ -g -Wall -Werror $(INCLUDE) -ldl -o killactiontests killactiontests.c++ killaction.c++
 	./killactiontests
+
+agentcontrollerctests:
+	g++ -g -Wall -Werror $(INCLUDE) -ldl -o agentcontrollertests agentcontrollertests.c++ agentcontroller.c++
+	./agentcontrollertests
+
+parameterparserctests:
+	g++ -g -Wall -Werror $(INCLUDE) -ldl -o parameterparsertests parametersparsertests.c++ parametersparser.c++
+	./parameterparsertests
+
 
 threadtests: threadtestbasic threadtest0 threadtest-10-2 threadtestpspawn-10-2
 
@@ -60,7 +69,7 @@ threadtest-10-2: build
 	@echo "=============================================="
 	$(JAVA_HOME)/bin/javac JvmKillTestThreads.java
 	!($(JAVA_HOME)/bin/java -Xmx1m \
-	    -agentpath:$(PWD)/$(TARGET)=time=10,count=2 \
+	    -agentpath:$(PWD)/$(TARGET)=time=10,count=2,printHeapHistogram=1 \
 	    -cp $(PWD) JvmKillTestThreads)
 
 memtests: memtest0 memtest-10-2

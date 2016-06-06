@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include <sys/types.h>
 #include <signal.h>
 #include <stdio.h>
@@ -19,6 +19,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "parameters.h"
 #include "threshold.h"
 #include "heuristic.h"
 
@@ -38,54 +39,12 @@ int clock_gettime(int clk_id, struct timespec *t){
 #include <time.h>
 #endif
 
-enum {
-    TIME_OPT = 0,
-    COUNT_OPT,
-    THE_END
-};
- 
-char *tokens[] = {
-    [TIME_OPT] = strdup("time"),
-    [COUNT_OPT] = strdup("count"),
-    [THE_END] = NULL
-};
-
-Threshold::Threshold(const char *opts) {
-   //sets defaults
-   count_threshold = 0;
-   time_threshold = 1;
-
-   if (opts != NULL) {
-      // Copy input options since getsubopt modifies its input
-      char *subopts = new char[strlen(opts) + 1];
-      strcpy(subopts, opts);
-
-      char *value;
-
-      while (*subopts != '\0') {
-         switch (getsubopt (&subopts, tokens, &value)) {
-            case COUNT_OPT:
-               if (value == NULL)
-                  abort ();
-               count_threshold = atoi (value);
-               break;
-
-            case TIME_OPT:
-               if (value == NULL)
-                  abort ();
-               time_threshold = atoi (value);
-               break;
-
-            default:
-               fprintf (stderr, "Unknown suboption '%s'\n", value);
-               break;
-         }
-      }
-   }
+Threshold::Threshold(AgentParameters param) {
+   parameters = param;
    eventIndex = 0;
-   events = new long[count_threshold + 1];
+   events = new long[parameters.count_threshold + 1];
    //prefill with a safe value
-   for (int i=0; i <= count_threshold; i++) {
+   for (int i=0; i <= parameters.count_threshold; i++) {
           events[i]=0;
    }
 
@@ -98,12 +57,12 @@ static long getTimeMillis() {
 }
 
 long Threshold::getMillisLimit() {
-   return getTimeMillis()-time_threshold*1000;
+   return getTimeMillis()-parameters.time_threshold*1000;
 }
 
 void Threshold::addEvent() {
    events[eventIndex]=getTimeMillis();
-   if (++eventIndex > count_threshold) {
+   if (++eventIndex > parameters.count_threshold) {
       eventIndex=0;
    }
 }
@@ -111,7 +70,7 @@ void Threshold::addEvent() {
 int Threshold::countEvents() {
    long millisLimit = getMillisLimit();
    int count = 0;
-   for (int i=0;i <= count_threshold;i++) {
+   for (int i=0;i <= parameters.count_threshold;i++) {
       if (events[i] != 0 && events[i]>=millisLimit) {
      	   count++;
        }
@@ -122,15 +81,6 @@ int Threshold::countEvents() {
 bool Threshold::onOOM() {
    addEvent();
    int eventCount = countEvents();
-   fprintf(stderr, "ResourceExhausted! (%d/%d)\n", eventCount, count_threshold);
-   return eventCount > count_threshold;
-}
-
-
-int Threshold::getCount_Threshold() {
-   return count_threshold;
-}
-
-int Threshold::getTime_Threshold() {
-   return time_threshold;
+   fprintf(stderr, "ResourceExhausted! (%d/%d)\n", eventCount, parameters.count_threshold);
+   return eventCount > parameters.count_threshold;
 }

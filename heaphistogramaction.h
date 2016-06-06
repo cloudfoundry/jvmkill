@@ -12,27 +12,20 @@
  * limitations under the License.
  */
 
-#ifndef threshold_h
-#define threshold_h
+#ifndef heaphistogramaction_h
+#define heaphistogramaction_h
 
-#include "heuristic.h"
-#include "parameters.h"
+#include "action.h"
+#include <jvmti.h>
 
-class Threshold: public Heuristic
+class HeapHistogramAction: public Action
 {
 public:
-   Threshold(AgentParameters param);
+   HeapHistogramAction(jvmtiEnv *jvmti);
 
-   bool onOOM();
+   void act();
 private:
-   // circular buffer containing the timestamps of up to count_threshold + 1 OOMs
-   long *events;
-   int eventIndex;
-   AgentParameters parameters;
-
-   void addEvent();
-   int countEvents();
-   long getMillisLimit();
+   jvmtiEnv* jvmti;
 };
 
-#endif // threshold_h
+#endif // heaphistogramaction_h

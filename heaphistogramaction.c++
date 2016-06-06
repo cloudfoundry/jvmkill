@@ -15,38 +15,28 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include <jvmti.h>
+#include "heaphistogramaction.h"
+#include "memory.h"
+#include "base.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/*
- * resourceExhausted callback registered in the JVM
- */
-void resourceExhausted(
-      jvmtiEnv *jvmti_env,
-      JNIEnv *jni_env,
-      jint flags,
-      const void *reserved,
-      const char *description);
-
-int getTime_Threshold();
-int getCount_Threshold();
-
-/*
- * function that parses agent parameters
- */
-void setParameters(char *options);
-#ifdef __cplusplus
+HeapHistogramAction::HeapHistogramAction(jvmtiEnv *jvm) {
+	jvmti=jvm;
 }
-#endif
 
-/*
- * Agent load callback called by the JVM
- */
-JNIEXPORT jint JNICALL
-Agent_OnLoad(JavaVM *vm, char *options, void *reserved);
+void HeapHistogramAction::act() {
+	fprintf(stderr, "Printing Heap Histogram\n");
+	jvmtiCapabilities capabilities;
+	/* Get/Add JVMTI capabilities */
+	CHECK(jvmti->GetCapabilities(&capabilities));
+	capabilities.can_tag_objects = 1;
+	capabilities.can_generate_garbage_collection_events = 1;
+	capabilities.can_get_source_file_name = 1;
+	capabilities.can_get_line_numbers = 1;
+	capabilities.can_suspend = 1;
+	CHECK(jvmti->AddCapabilities(&capabilities));
+	printHistogram(jvmti, &(std::cout), true);
+}

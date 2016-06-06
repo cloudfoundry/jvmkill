@@ -12,27 +12,16 @@
  * limitations under the License.
  */
 
-#ifndef threshold_h
-#define threshold_h
+#ifndef parameters_h
+#define parameters_h
 
-#include "heuristic.h"
-#include "parameters.h"
-
-class Threshold: public Heuristic
-{
-public:
-   Threshold(AgentParameters param);
-
-   bool onOOM();
-private:
-   // circular buffer containing the timestamps of up to count_threshold + 1 OOMs
-   long *events;
-   int eventIndex;
-   AgentParameters parameters;
-
-   void addEvent();
-   int countEvents();
-   long getMillisLimit();
+/**
+ * Struct that holds agent configuration
+ */
+struct AgentParameters {
+   int time_threshold;
+   int count_threshold;
+   bool print_heap_histogram;
 };
 
-#endif // threshold_h
+#endif // parameters_h

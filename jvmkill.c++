@@ -11,23 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cstring>
+#include "agentcontroller.h"
 
-#include "action.h"
-#include "heuristic.h"
-#include "jvmkill.h"
-#include "killaction.h"
-#include "threshold.h"
-
+static AgentController* agentController;
 static jrawMonitorID monitorID;
-static Heuristic* heuristic;
-static Action* action;
-
-void setSignal(int signal) {
-  if (action == NULL) {
-    action = createAction();
-  }
-  ((KillAction*)action)->setSignal(signal);
-}
 
 void resourceExhausted(
       jvmtiEnv *jvmti_env,
@@ -43,9 +31,7 @@ void resourceExhausted(
       return;
    }
 
-   if (heuristic->onOOM()) {
-      action->act();
-   }
+   agentController->onOOM();
 
    err = jvmti_env->RawMonitorExit(monitorID);
    if (err != JVMTI_ERROR_NONE) {
@@ -78,12 +64,8 @@ int setCallbacks(jvmtiEnv *jvmti) {
       fprintf(stderr, "ERROR: SetEventNotificationMode failed: %d\n", err);
       return JNI_ERR;
    }
-   
-   return JNI_OK;
-}
 
-void setParameters(char *options) {
-   heuristic = createHeuristic(options);
+   return JNI_OK;
 }
 
 JNIEXPORT jint JNICALL
@@ -96,19 +78,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
       fprintf(stderr, "ERROR: GetEnv failed: %d\n", rc);
       return JNI_ERR;
    }
-   setParameters(options);
-   if (action == NULL) {
-    action = createAction();
-   }
+   agentController = new AgentController(jvmti);
+   agentController->setup(options);
    return setCallbacks(jvmti);
 }
-
-int getTime_Threshold() {
-  return ((Threshold*)heuristic)->getTime_Threshold();
-}
-
-int getCount_Threshold() {
-  return ((Threshold*)heuristic)->getCount_Threshold();
-}
-
-

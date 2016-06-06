@@ -12,27 +12,27 @@
  * limitations under the License.
  */
 
-#ifndef threshold_h
-#define threshold_h
+#ifndef agentcontroller_h
+#define agentcontroller_h
 
-#include "heuristic.h"
+#include <jvmti.h>
+
 #include "parameters.h"
+#include "action.h"
+#include "heuristic.h"
 
-class Threshold: public Heuristic
-{
+class AgentController {
 public:
-   Threshold(AgentParameters param);
-
-   bool onOOM();
+   AgentController(jvmtiEnv* jvm);
+   void setup(char *options);
+   void setParameters(AgentParameters parameters);
+   void onOOM();
 private:
-   // circular buffer containing the timestamps of up to count_threshold + 1 OOMs
-   long *events;
-   int eventIndex;
-   AgentParameters parameters;
-
-   void addEvent();
-   int countEvents();
-   long getMillisLimit();
+  jvmtiEnv* jvmti;
+  Heuristic* heuristic;
+  Action** actions;
+  int actionCount;
 };
 
-#endif // threshold_h
+
+#endif // agentcontroller_h

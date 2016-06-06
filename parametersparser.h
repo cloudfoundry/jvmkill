@@ -12,27 +12,20 @@
  * limitations under the License.
  */
 
-#ifndef threshold_h
-#define threshold_h
+#ifndef parametersparser_h
+#define parametersparser_h
 
-#include "heuristic.h"
 #include "parameters.h"
 
-class Threshold: public Heuristic
-{
+class ParametersParser {
 public:
-   Threshold(AgentParameters param);
+   ParametersParser();
 
-   bool onOOM();
-private:
-   // circular buffer containing the timestamps of up to count_threshold + 1 OOMs
-   long *events;
-   int eventIndex;
-   AgentParameters parameters;
-
-   void addEvent();
-   int countEvents();
-   long getMillisLimit();
+   AgentParameters parse(char *options);
 };
 
-#endif // threshold_h
+static inline ParametersParser* createParametersParser() {
+    return new ParametersParser();
+}
+
+#endif // parametersparser_h

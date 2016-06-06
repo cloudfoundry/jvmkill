@@ -30,7 +30,7 @@ private:
    int signal;
 };
 
-static inline Action* createAction() {
+static inline Action* createKillAction() {
     return new KillAction();
 }
 
